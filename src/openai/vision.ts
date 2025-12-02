@@ -1,0 +1,74 @@
+/**
+ * Image analysis using OpenAI GPT-4 Vision
+ */
+
+import OpenAI from "openai";
+import fs from "fs";
+import path from "path";
+import { config } from "../config";
+import { logger } from "../utils/logger";
+
+const openai = new OpenAI({
+  apiKey: config.openaiApiKey,
+});
+
+// Load vision prompt
+const visionPromptPath = path.join(__dirname, "../prompts", "vision_prompt.txt");
+const visionPrompt = fs.readFileSync(visionPromptPath, "utf8");
+
+/**
+ * Analyze image using GPT-4 Vision
+ * @param imageUrl Public URL of the image
+ * @param caption Optional caption/text sent with the image
+ * @returns Analysis/description of the image
+ */
+export async function analyzeImage(
+  imageUrl: string,
+  caption?: string
+): Promise<string | null> {
+  try {
+    logger.info("🖼️  Analyzing image...");
+
+    const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: caption
+              ? `${visionPrompt}\n\nהלקוח כתב: "${caption}"`
+              : visionPrompt,
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: imageUrl,
+            },
+          },
+        ],
+      },
+    ];
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o", // GPT-4 Vision model
+      messages,
+      max_completion_tokens: 500,
+    });
+
+    const analysis = response.choices[0]?.message?.content;
+
+    if (!analysis) {
+      logger.warn("⚠️  Vision API returned empty analysis");
+      return null;
+    }
+
+    logger.info(`📸 Analysis: "${analysis.substring(0, 100)}..."`);
+    return analysis;
+  } catch (error) {
+    logger.error("❌ Image analysis failed", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
+  }
+}
+
