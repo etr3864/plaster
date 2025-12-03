@@ -8,6 +8,8 @@ import { config } from "./config";
 import { logger } from "./utils/logger";
 import { handleWhatsAppWebhook } from "./wa/webhookHandler";
 import { initRedis, closeRedis, getRedis } from "./db/redis";
+import calendarRoutes from "./calendar/routes";
+import { startMeetingReminderScheduler } from "./calendar/reminders/scheduler";
 
 const app = express();
 
@@ -20,6 +22,9 @@ app.use((_req, _res, next) => {
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Calendar API routes
+app.use("/calendar", calendarRoutes);
 
 // Health check endpoint - checks server and Redis status
 app.get("/health", async (_req: Request, res: Response) => {
@@ -111,6 +116,7 @@ app.listen(config.port, () => {
   console.log("=".repeat(60));
   console.log(`  Port: ${config.port}`);
   console.log(`  Webhook: http://localhost:${config.port}/webhook`);
+  console.log(`  Calendar API: http://localhost:${config.port}/calendar/meeting`);
   console.log(`  Model: ${config.openaiModel}`);
   console.log(`  Buffer: ${config.batchWindowMs / 1000}s`);
   
@@ -119,6 +125,9 @@ app.listen(config.port, () => {
   if (config.redisEnabled) {
     console.log(`  Storage: Redis (${config.redisHost}:${config.redisPort})`);
     console.log(`  TTL: ${config.redisTtlDays} days`);
+    
+    // Start meeting reminder scheduler (only if Redis is enabled)
+    startMeetingReminderScheduler();
   } else {
     console.log(`  Storage: In-Memory (not persistent)`);
   }

@@ -51,6 +51,11 @@ export const config = {
   redisEnabled: process.env.REDIS_ENABLED === "true",
   redisTtlDays: parseInt(process.env.REDIS_TTL_DAYS || "7", 10), // Keep conversations for 7 days
 
+  // Meeting Reminders
+  reminderDayOfMeetingTime: process.env.REMINDER_DAY_OF_MEETING_TIME || "09:00",
+  reminderMinutesBefore: parseInt(process.env.REMINDER_MINUTES_BEFORE || "45", 10),
+  reminderWindowMinutes: parseInt(process.env.REMINDER_WINDOW_MINUTES || "3", 10),
+
   // Debug mode (skip webhook verification)
   skipWebhookVerification: process.env.SKIP_WEBHOOK_VERIFICATION === "true",
 };
