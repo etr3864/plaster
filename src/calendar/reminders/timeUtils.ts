@@ -6,7 +6,7 @@
  * This handles DST (Daylight Saving Time) automatically
  */
 
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
+import { fromZonedTime, format } from "date-fns-tz";
 
 const ISRAEL_TIMEZONE = "Asia/Jerusalem";
 
@@ -35,11 +35,11 @@ export function parseTimeToDate(time: string, date: string): Date {
 }
 
 /**
- * Get current time in Israel timezone
- * Use this instead of new Date() to ensure we're working with Israel time
+ * Get current time (returns Date object with current UTC timestamp)
+ * The scheduler compares this with parseTimeToDate which returns Israel time converted to UTC
  */
 export function getNowInIsrael(): Date {
-  return toZonedTime(new Date(), ISRAEL_TIMEZONE);
+  return new Date();
 }
 
 /**
@@ -54,9 +54,10 @@ export function isSameDay(date1: Date, date2: Date): boolean {
 }
 
 /**
- * Format date to YYYY-MM-DD
+ * Format date to YYYY-MM-DD in Israel timezone
+ * This ensures we check "same day" according to Israel time, not UTC
  */
 export function formatDateYMD(date: Date): string {
-  return date.toISOString().slice(0, 10);
+  return format(date, 'yyyy-MM-dd', { timeZone: ISRAEL_TIMEZONE });
 }
 
